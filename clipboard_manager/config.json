@@ -1,0 +1,8 @@
+{
+  "retain_days": 172,
+  "hotkey": "alt+d",
+  "theme": "light",
+  "enable_image": true,
+  "sync_system_theme": false,
+  "hide_after_copy": false
+}
