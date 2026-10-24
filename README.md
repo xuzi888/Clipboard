@@ -1,4 +1,4 @@
-# 📋 KjjClipboardManager (Windows 剪贴板与快捷短语管理神器)
+# 📋 Clipboard (Windows 剪贴板与快捷短语管理神器)
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.7.1-green?style=flat-square&logo=qt)
