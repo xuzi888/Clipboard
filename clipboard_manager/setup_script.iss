@@ -1,7 +1,7 @@
 [Setup]
 AppName=剪贴板管理器
 ; 注意：这里的版本号会被 sync_version.py 脚本自动从 main.py 同步更新，请务必保留此行
-AppVersion=1.0
+AppVersion=1.1
 AppPublisher=xuzi
 AppPublisherURL=https://github.com/xuzi888/Clipboard
 AppSupportURL=https://github.com/xuzi888/Clipboard
@@ -32,6 +32,9 @@ Source: "D:\daima\kjj\clipboard_manager\dist\剪贴板管理器\*"; DestDir: "{a
 [Icons]
 Name: "{group}\剪贴板管理器"; Filename: "{app}\剪贴板管理器.exe"
 Name: "{autodesktop}\剪贴板管理器"; Filename: "{app}\剪贴板管理器.exe"; Tasks: desktopicon
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "KjjClipboardManager"; ValueData: """{app}\剪贴板管理器.exe"""; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\剪贴板管理器.exe"; Description: "{cm:LaunchProgram,剪贴板管理器}"; Flags: nowait postinstall skipifsilent

@@ -8,12 +8,12 @@ import cv2
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QListWidget, QListWidgetItem,
                              QVBoxLayout, QHBoxLayout, QGridLayout, QWidget, QLabel, QSystemTrayIcon, QMenu,
                              QStyle, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QPushButton, QDialog, QFormLayout, QSpinBox, QLineEdit, QCheckBox, QFrame, QStyleFactory, QStyledItemDelegate, QProxyStyle, QAbstractScrollArea, QScrollArea, QComboBox, QTextEdit, QStackedWidget, QToolButton, QMessageBox, QSizePolicy)
-from PyQt6.QtGui import QDrag, QPixmap, QPainter, QIcon, QClipboard, QAction, QColor, QFont, QKeyEvent, QPainterPath, QImage
+from PyQt6.QtGui import QDrag, QPixmap, QPainter, QIcon, QClipboard, QAction, QColor, QFont, QFontMetrics, QKeyEvent, QPainterPath, QImage
 from PyQt6.QtCore import QMimeData, QPoint, Qt, pyqtSignal, QObject, QByteArray, QSize, QEvent, QPropertyAnimation, QEasingCurve, QBuffer, QIODevice, QSharedMemory, pyqtProperty, QUrl, QTimer, QRect
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 
-APP_VERSION = "1.0" # 全局统一版本号
+APP_VERSION = "1.1" # 全局统一版本号
 APP_NAME = "剪贴板管理器"
 APP_ID = "KjjClipboardManager"
 
@@ -150,29 +150,24 @@ class ClipboardListWidget(QListWidget):
             if item_type == "image":
                 path = data.get("path")
                 if path and os.path.exists(path):
-                    # 同时提供图片数据和文件路径
+                    # 为了兼容大多数应用（包括拼多多、微信等 Electron 应用和 Office）
+                    # 最好的方式是提供文件路径 (Urls) 和 标准图片数据 (ImageData)。
+                    # 避免使用 HTML Base64，因为它会导致部分聊天软件解析混乱，无法提取出图片。
                     image = QImage(path)
                     mime_data.setImageData(image)
                     mime_data.setUrls([QUrl.fromLocalFile(path)])
-                    
-                    # 为了兼容 Electron 系应用（如飞书、Discord）
-                    with open(path, "rb") as f:
-                        png_data = f.read()
-                        mime_data.setData("image/png", QByteArray(png_data))
-                        
-                    # 兼容网页富文本编辑器
-                    safe_path = path.replace('\\', '/')
-                    html = f'<html><body><img src="file:///{safe_path}"></body></html>'
-                    mime_data.setHtml(html)
-            elif item_type == "file":
-                urls = [QUrl.fromLocalFile(p) for p in data.get("urls", [])]
+            elif item_type in ["file", "document", "video", "audio", "folder"]:
+                paths = data.get("urls", [])
+                urls = [QUrl.fromLocalFile(p) for p in paths]
                 mime_data.setUrls(urls)
-            elif item_type in ["document", "video", "audio", "folder"]:
-                urls = [QUrl.fromLocalFile(p) for p in data.get("urls", [])]
-                mime_data.setUrls(urls)
+                # 移除这里的 setText，因为如果同时提供文本和文件，Word等软件会优先粘贴纯文本（文件路径）而不是插入文件
+            else:
+                # 纯文本处理 (当 data 是 dict 且 type 为 text 或其他时)
+                text = data.get("text", "")
+                mime_data.setText(text)
         else:
             # 纯文本处理
-            text = data if not isinstance(data, dict) else data.get("text", "")
+            text = str(data)
             
             # 仅提供最纯净的文本拖拽，剥离任何富文本(HTML)和路径解析
             # 防止第三方软件过度解析（例如把正常的路径字符串当成文件拖入，或出现格式错误）
@@ -193,7 +188,7 @@ class ClipboardListWidget(QListWidget):
             drag.setPixmap(transparent_pixmap)
             drag.setHotSpot(QPoint(transparent_pixmap.width() // 2, transparent_pixmap.height() // 2))
             
-        drag.exec(Qt.DropAction.CopyAction)
+        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction)
 
 from PyQt6.QtSvg import QSvgRenderer
 from snippets_ui import SnippetsUI
@@ -304,7 +299,9 @@ def set_autostart(enable):
         import winreg
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
         if enable:
-            if sys.argv[0].endswith('.py'):
+            if getattr(sys, 'frozen', False):
+                cmd = f'"{sys.executable}"'
+            elif sys.argv[0].endswith('.py'):
                 python_exe = sys.executable
                 if python_exe.endswith('python.exe'):
                     python_exe = python_exe.replace('python.exe', 'pythonw.exe')
@@ -734,6 +731,7 @@ class SettingsWidget(QWidget):
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(5, 5, 10, 15)
         
+        header_layout.addSpacing(28) # Balance the close button on the right
         header_title = QLabel(f"偏好设置 (v{APP_VERSION})")
         header_title.setObjectName("HeaderTitle")
         header_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1476,7 +1474,10 @@ class TutorialDialog(QDialog):
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.clicked.connect(self.accept)
         
+        header_layout.addSpacing(30)
+        header_layout.addStretch()
         header_layout.addWidget(header_title)
+        header_layout.addStretch()
         header_layout.addWidget(close_btn)
         
         # 主体区域 (左侧导航 + 右侧内容)
@@ -1534,7 +1535,10 @@ class TutorialDialog(QDialog):
              "&nbsp;&nbsp;🗑️ <b>单条删除：</b>点击右侧出现的垃圾桶图标即可删除不需要的数据。"),
             ("超级拖拽", SVG_IMPORT, "超级拖拽",
              "<b>无缝交互：</b>按住任意文本或图片条目向外拖拽，可直接将内容拖入各类编辑器、IDE或输入框中。<br><br>"
-             "<b>快捷保存：</b>图片和文件不仅可以拖入聊天框发送，还可以直接拖拽至桌面或任意文件夹，快速保存为本地文件！"),
+             "<b>快捷保存：</b>图片和文件不仅可以拖入聊天框发送，还可以直接拖拽至桌面或任意文件夹，快速保存为本地文件！<br><br>"
+             "<b>⚠️ 第三方软件拖拽限制说明：</b><br>"
+             "&nbsp;&nbsp;1. <b>部分聊天软件工作台：</b>已完美兼容图片、文件、纯文本和视频的直接拖拽发送。若发现纯文本、图片、视频或文件无法拖拽，是因为部分软件自身禁用了该类型内容的拖拽输入以防排版错乱，请改用点击复制后 <code>Ctrl+V</code> 粘贴。<br>"
+             "&nbsp;&nbsp;2. <b>权限拦截：</b>如果拖拽时鼠标变成“禁止符号 🚫”，通常是因为目标软件（如某些游戏、以管理员身份运行的软件）权限比本程序高。请尝试右键以“管理员身份运行”本程序。"),
             ("快捷短语管理", SVG_FOLDER, "快捷短语管理",
              "<b>短语分组：</b>点击左侧导航栏的“快捷短语”进入管理页面，您可以创建不同的分组（如：问候语、代码片段、邮箱地址等）。<br><br>"
              "<b>一键发送：</b>在短语列表中单击即可快速粘贴常用短语，极大提升客服或日常回复的效率。<br><br>"
@@ -1620,10 +1624,12 @@ class TutorialDialog(QDialog):
         p_title = QLabel(page_title)
         p_title.setProperty("class", "PageTitle")
         
+        title_layout.addStretch()
         title_layout.addWidget(icon_lbl)
         self._page_icons[index] = (icon_lbl, icon_svg) # 记录引用
         title_layout.addSpacing(10)
         title_layout.addWidget(p_title)
+        title_layout.addStretch()
         
         page_layout.addLayout(title_layout)
         
@@ -2000,7 +2006,8 @@ class AboutDialog(QDialog):
 
         add_grid_row(0, "作者", "xuzi")
         add_grid_row(1, "开源地址", "https://github.com/xuzi888/Clipboard", True)
-        add_grid_row(2, "QQ交流群", "550133641")
+        add_grid_row(2, "程序下载", "https://github.com/xuzi888/Clipboard/releases/tag/%E5%89%AA%E8%B4%B4%E6%9D%BF%E7%AE%A1%E7%90%86%E5%99%A8%E5%AE%89%E8%A3%85%E5%8C%85", True)
+        add_grid_row(3, "QQ交流群", "550133641")
         
         info_card_layout.addLayout(info_grid)
         content_layout.addWidget(info_card)
@@ -2218,6 +2225,7 @@ class EditTextDialog(QDialog):
         
         # Header
         header_layout = QHBoxLayout()
+        header_layout.addStretch()
         header_title = QLabel("编辑文本")
         header_title.setObjectName("HeaderTitle")
         header_layout.addWidget(header_title)
@@ -2565,7 +2573,10 @@ class ClipboardApp(QMainWindow):
                 except Exception as e: print(f"释放默认数据文件失败: {e}")
                 
             if not os.path.exists(self.config_file) and os.path.exists(default_config):
-                try: shutil.copy2(default_config, self.config_file)
+                try: 
+                    shutil.copy2(default_config, self.config_file)
+                    # 第一次运行，默认开启开机自启
+                    set_autostart(True)
                 except Exception as e: print(f"释放默认配置文件失败: {e}")
                 
             if not os.path.exists(self.images_dir) and os.path.exists(default_images):
@@ -2578,6 +2589,9 @@ class ClipboardApp(QMainWindow):
             self.data_file = os.path.join(self.user_data_dir, "data.json")
             self.config_file = os.path.join(self.user_data_dir, "config.json")
             self.images_dir = os.path.join(self.user_data_dir, "images")
+            
+            if not os.path.exists(self.config_file):
+                set_autostart(True)
             
         os.makedirs(self.images_dir, exist_ok=True)
 
@@ -2918,6 +2932,21 @@ class ClipboardApp(QMainWindow):
         w = self.width()
         h = self.height()
         self.move((screen.width() - w) // 2, (screen.height() - h) // 2)
+
+        # 启动焦点追踪定时器
+        self.focus_tracker_timer = QTimer(self)
+        self.focus_tracker_timer.timeout.connect(self._track_foreground_window)
+        self.focus_tracker_timer.start(200)
+        self.previous_hwnd = None
+
+    def _track_foreground_window(self):
+        try:
+            import win32gui
+            current_hwnd = win32gui.GetForegroundWindow()
+            if current_hwnd and current_hwnd != int(self.winId()):
+                self.previous_hwnd = current_hwnd
+        except Exception:
+            pass
 
     def get_current_effective_theme(self):
         if self.config.get("sync_system_theme", False):
@@ -3658,6 +3687,10 @@ class ClipboardApp(QMainWindow):
 
     def get_image_hash(self, image):
         try:
+            # 统一转换为 Format_RGB32 保证哈希值在不同环境和重启后一致
+            if image.format() != QImage.Format.Format_RGB32:
+                image = image.convertToFormat(QImage.Format.Format_RGB32)
+            
             # 极速 Hash 算法：直接读取图片的原始内存数据进行哈希，速度是保存 PNG 再哈希的 10 倍以上
             ptr = image.constBits()
             ptr.setsize(image.sizeInBytes())
@@ -3746,12 +3779,25 @@ class ClipboardApp(QMainWindow):
                         # 如果是多个文件混合，统一称为 file
                         file_type = "file"
                     
-                    self.history.insert(0, {
-                        "type": file_type,
-                        "urls": file_paths,
-                        "hash": file_hash,
-                        "timestamp": time.time()
-                    })
+                    existing_item = None
+                    for h in self.history:
+                        if isinstance(h, dict) and h.get("type") in ["file", "document", "video", "audio", "folder"] and h.get("hash") == file_hash:
+                            existing_item = h
+                            break
+                            
+                    if existing_item:
+                        self.history.remove(existing_item)
+                        existing_item["timestamp"] = time.time()
+                        existing_item["type"] = file_type
+                        existing_item["urls"] = file_paths
+                        self.history.insert(0, existing_item)
+                    else:
+                        self.history.insert(0, {
+                            "type": file_type,
+                            "urls": file_paths,
+                            "hash": file_hash,
+                            "timestamp": time.time()
+                        })
                     
                     if len(self.history) > 50:
                         removed = self.history.pop()
@@ -3842,10 +3888,23 @@ class ClipboardApp(QMainWindow):
                 self.last_text = text
                 self.last_image_hash = ""
                 
-                # 移除重复
-                self.history = [h for h in self.history if (h.get("text") if isinstance(h, dict) else h) != text]
-                # 关键修复：加入 "type": "text" 属性，以便筛选框能正确识别
-                self.history.insert(0, {"type": "text", "text": text, "timestamp": time.time()})
+                existing_item = None
+                for h in self.history:
+                    if (h.get("text") if isinstance(h, dict) else h) == text:
+                        existing_item = h
+                        break
+                
+                if existing_item:
+                    self.history.remove(existing_item)
+                    if isinstance(existing_item, dict):
+                        existing_item["timestamp"] = time.time()
+                        if "type" not in existing_item:
+                            existing_item["type"] = "text"
+                        self.history.insert(0, existing_item)
+                    else:
+                        self.history.insert(0, {"type": "text", "text": text, "timestamp": time.time()})
+                else:
+                    self.history.insert(0, {"type": "text", "text": text, "timestamp": time.time()})
                 
                 if len(self.history) > 50:
                     removed = self.history.pop()
@@ -3933,7 +3992,7 @@ class ClipboardApp(QMainWindow):
                     self.update_list()
                     if self.history:
                         first_item = self.history[0]
-                        if isinstance(first_item, dict) and first_item.get("type") == "image":
+                        if isinstance(first_item, dict) and first_item.get("type") in ["image", "file", "document", "video", "audio", "folder"]:
                             self.last_image_hash = first_item.get("hash", "")
                         else:
                             self.last_text = first_item.get("text", "") if isinstance(first_item, dict) else first_item
@@ -4018,21 +4077,45 @@ class ClipboardApp(QMainWindow):
                 
                 type_icon = QLabel()
                 type_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-                if image_path or pixmap:
-                    icon_color = "#a6e3a1" if theme == "dark" else "#40a02b"
-                    type_icon.setPixmap(create_svg_icon(SVG_IMAGE, 14, icon_color).pixmap(14, 14))
-                elif video_path:
+                if video_path:
                     icon_color = "#f9e2af" if theme == "dark" else "#df8e1d"
                     type_icon.setPixmap(create_svg_icon(SVG_PLAY, 14, icon_color).pixmap(14, 14))
+                    type_text = "视频"
+                elif image_path or (pixmap and not text):
+                    icon_color = "#a6e3a1" if theme == "dark" else "#40a02b"
+                    type_icon.setPixmap(create_svg_icon(SVG_IMAGE, 14, icon_color).pixmap(14, 14))
+                    type_text = "图片"
                 elif text and ("[文件]" in text or "[文档]" in text or "[音频]" in text):
                     icon_color = "#cba6f7" if theme == "dark" else "#8839ef"
                     type_icon.setPixmap(create_svg_icon(SVG_FILE, 14, icon_color).pixmap(14, 14))
+                    if "[文件]" in text: type_text = "文件"
+                    elif "[文档]" in text: type_text = "文档"
+                    elif "[音频]" in text: type_text = "音频"
+                    else: type_text = "文件"
                 elif text and "[文件夹]" in text:
                     icon_color = "#f38ba8" if theme == "dark" else "#d20f39"
                     type_icon.setPixmap(create_svg_icon(SVG_FOLDER, 14, icon_color).pixmap(14, 14))
+                    type_text = "文件夹"
+                elif text and "[视频]" in text:
+                    icon_color = "#f9e2af" if theme == "dark" else "#df8e1d"
+                    type_icon.setPixmap(create_svg_icon(SVG_PLAY, 14, icon_color).pixmap(14, 14))
+                    type_text = "视频"
+                elif text and "[图片]" in text:
+                    icon_color = "#a6e3a1" if theme == "dark" else "#40a02b"
+                    type_icon.setPixmap(create_svg_icon(SVG_IMAGE, 14, icon_color).pixmap(14, 14))
+                    type_text = "图片"
                 else:
                     icon_color = "#89b4fa" if theme == "dark" else "#1e66f5"
                     type_icon.setPixmap(create_svg_icon(SVG_BOOK, 14, icon_color).pixmap(14, 14))
+                    type_text = "文本"
+                
+                type_label = QLabel(type_text)
+                type_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                type_label.setFont(QFont("Microsoft YaHei", 9, QFont.Weight.Bold))
+                if theme == "dark":
+                    type_label.setStyleSheet("color: #cdd6f4;")
+                else:
+                    type_label.setStyleSheet("color: #4c4f69;")
                 
                 time_lbl = QLabel(time.strftime("%Y-%m-%d %H:%M", time.localtime(timestamp)))
                 time_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -4042,8 +4125,16 @@ class ClipboardApp(QMainWindow):
                 else:
                     time_lbl.setStyleSheet("color: #9ca0b0;")
                     
-                header_layout.addWidget(type_icon)
+                type_layout = QHBoxLayout()
+                type_layout.setSpacing(2)
+                type_layout.setContentsMargins(0, 0, 0, 0)
+                type_icon.setFixedSize(14, 14)
+                type_layout.addWidget(type_icon)
+                type_layout.addWidget(type_label)
+                
+                header_layout.addLayout(type_layout)
                 header_layout.addWidget(time_lbl)
+                header_layout.addStretch()
                 header_layout.setContentsMargins(0, 0, 4, 0)
                 
                 # 隐藏/显示的按钮组
@@ -4202,13 +4293,22 @@ class ClipboardApp(QMainWindow):
                         layout.addWidget(img_lbl)
                 
                 if text is not None:
-                    # 剥离前缀，使其更干净
                     display_text = text
-                    for prefix in ["[图片] ", "[文件] ", "[文档] ", "[视频] ", "[音频] ", "[文件夹] ", "[文本] "]:
-                        if display_text.startswith(prefix):
-                            display_text = display_text[len(prefix):]
-                            break
-                            
+                    
+                    # 使用 QFontMetrics 动态计算并在必要时添加省略号
+                    font = QFont("Microsoft YaHei", 10)
+                    fm = QFontMetrics(font)
+                    
+                    # 设定最大允许宽度和高度（给一些安全边距）
+                    # 假设卡片宽度约 260px，最大高度约 150px
+                    # 但为了保险，我们使用字符级别的绝对限制来确保截断可见
+                    max_chars = 150
+                    lines = display_text.split('\n')
+                    if len(lines) > 4:
+                        display_text = '\n'.join(lines[:4]) + "\n..."
+                    elif len(display_text) > max_chars:
+                        display_text = display_text[:max_chars] + "..."
+                    
                     # 容器用于包含 label 和 editor
                     self.text_container = QWidget()
                     self.text_container.setObjectName("TextContainer")
@@ -4220,6 +4320,8 @@ class ClipboardApp(QMainWindow):
                     self.text_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
                     self.text_lbl.setFont(QFont("Microsoft YaHei", 10))
                     self.text_lbl.setWordWrap(True)
+                    self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+                    self.text_lbl.setMaximumHeight(160) # 限制最大高度，超长文本在底部自然裁剪，不遮挡顶部
                     # 移除硬编码宽度，使用布局自动适应
                     self.text_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                     if theme == "dark":
@@ -4230,7 +4332,7 @@ class ClipboardApp(QMainWindow):
 
                     # 编辑器组件
                     self.text_edit = QTextEdit()
-                    self.text_edit.setPlainText(display_text)
+                    self.text_edit.setPlainText(text) # 使用完整文本进行编辑
                     self.text_edit.setFont(QFont("Microsoft YaHei", 10))
                     self.text_edit.setFixedHeight(120) # 默认高度
                     self.text_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -4275,14 +4377,31 @@ class ClipboardApp(QMainWindow):
                     # 绑定内联编辑事件
                     def on_save():
                         new_text = self.text_edit.toPlainText()
-                        if new_text != self.text_lbl.text():
-                            data = self.list_item.data(Qt.ItemDataRole.UserRole)
+                        
+                        # 获取原始完整数据
+                        data = self.list_item.data(Qt.ItemDataRole.UserRole)
+                        old_text = ""
+                        if isinstance(data, str):
+                            old_text = data
+                        elif isinstance(data, dict):
+                            old_text = data.get("text", "")
+                            
+                        if new_text != old_text:
                             if isinstance(data, str):
                                 data = {"type": "text", "text": new_text, "timestamp": time.time(), "pinned": False}
                             elif isinstance(data, dict):
                                 data["text"] = new_text
                             self.list_item.setData(Qt.ItemDataRole.UserRole, data)
-                            self.text_lbl.setText(new_text)
+                            
+                            new_display_text = new_text
+                            max_chars = 200
+                            lines = new_display_text.split('\n')
+                            if len(lines) > 5:
+                                new_display_text = '\n'.join(lines[:5]) + "\n..."
+                            elif len(new_display_text) > max_chars:
+                                new_display_text = new_display_text[:max_chars] + "..."
+                            self.text_lbl.setText(new_display_text)
+                            
                             self.app_instance.sync_item_data_to_history(data)
                             
                         self.text_edit.hide()
@@ -4296,7 +4415,14 @@ class ClipboardApp(QMainWindow):
                         self.app_instance.update_list()
                         
                     def on_cancel():
-                        self.text_edit.setPlainText(self.text_lbl.text())
+                        # 获取原始完整数据以重置编辑器
+                        data = self.list_item.data(Qt.ItemDataRole.UserRole)
+                        old_text = ""
+                        if isinstance(data, str):
+                            old_text = data
+                        elif isinstance(data, dict):
+                            old_text = data.get("text", "")
+                        self.text_edit.setPlainText(old_text)
                         self.text_edit.hide()
                         self.edit_actions.hide()
                         self.text_lbl.show()
@@ -4398,19 +4524,9 @@ class ClipboardApp(QMainWindow):
                     return
                 if hasattr(self, '_drag_start_pos'):
                     if (event.pos() - self._drag_start_pos).manhattanLength() > QApplication.startDragDistance():
+                        del self._drag_start_pos
                         self.app_instance.list_widget.setCurrentItem(self.list_item)
                         
-                        item_data = self.list_item.data(Qt.ItemDataRole.UserRole)
-                        drag = QDrag(self.app_instance.list_widget)
-                        mime_data = QMimeData()
-                        
-                        if isinstance(item_data, dict) and item_data.get("type") == "file":
-                            urls = [QUrl.fromLocalFile(p) for p in item_data.get("urls", [])]
-                            mime_data.setUrls(urls)
-                            drag.setMimeData(mime_data)
-                            drag.exec(Qt.DropAction.CopyAction)
-                            return
-                            
                         # 手动触发列表的拖拽
                         self.app_instance.list_widget.startDrag(Qt.DropAction.CopyAction)
 
@@ -4663,7 +4779,7 @@ class ClipboardApp(QMainWindow):
                 item.setData(Qt.ItemDataRole.UserRole, item_data)
                 item.setForeground(QColor(0, 0, 0, 0)) 
                 
-                widget = HistoryItemWidget(self, item, text=display_text, timestamp=timestamp, is_pinned=is_pinned, theme=current_theme)
+                widget = HistoryItemWidget(self, item, text=text, timestamp=timestamp, is_pinned=is_pinned, theme=current_theme)
                 viewport_width = self.list_widget.viewport().width() - 12
                 if viewport_width > 0:
                     widget.setFixedWidth(viewport_width)
@@ -4751,17 +4867,34 @@ class ClipboardApp(QMainWindow):
             
         QApplication.clipboard().setMimeData(mime_data)
         
-        if self.config.get("hide_after_copy", True):
-            # 触发系统的自动粘贴
-            self.do_paste_action()
-        else:
-            theme = self.get_current_effective_theme()
-            self.toast = Toast("已复制到剪贴板", parent=None, theme=theme)
-            center_pos = self.geometry().center()
-            QTimer.singleShot(50, lambda: self.toast.show_toast(center_pos))
+        # 无论是否隐藏窗口，都触发系统的自动粘贴
+        self.do_paste_action()
         
     def do_paste_action(self):
         def do_paste():
+            # 如果没有隐藏窗口，需要将焦点交还给目标窗口才能粘贴
+            if not self.config.get("hide_after_copy", True):
+                try:
+                    import win32gui
+                    import win32process
+                    import win32api
+                    import time
+                    if hasattr(self, 'previous_hwnd') and self.previous_hwnd:
+                        current_thread = win32api.GetCurrentThreadId()
+                        target_thread, _ = win32process.GetWindowThreadProcessId(self.previous_hwnd)
+                        if current_thread != target_thread:
+                            win32process.AttachThreadInput(current_thread, target_thread, True)
+                            win32gui.SetForegroundWindow(self.previous_hwnd)
+                            win32gui.SetFocus(self.previous_hwnd)
+                            win32process.AttachThreadInput(current_thread, target_thread, False)
+                        else:
+                            win32gui.SetForegroundWindow(self.previous_hwnd)
+                            win32gui.SetFocus(self.previous_hwnd)
+                        # 给目标窗口一点时间来准备接收输入
+                        time.sleep(0.05)
+                except Exception as e:
+                    print("Restore focus failed:", e)
+
             try:
                 import win32api
                 import win32con
@@ -5009,13 +5142,9 @@ class ClipboardApp(QMainWindow):
         if self.config.get("hide_after_copy", True):
             # 优化点 1: 隐藏窗口必须放在最前面，这样底层目标窗口才能尽早获得焦点！
             self.hide()
-            # 统一使用封装的粘贴函数
-            self.do_paste_action()
-        else:
-            theme = self.get_current_effective_theme()
-            self.toast = Toast("已复制到剪贴板", parent=None, theme=theme)
-            center_pos = self.geometry().center()
-            QTimer.singleShot(50, lambda: self.toast.show_toast(center_pos))
+            
+        # 无论是否隐藏，都触发自动粘贴
+        self.do_paste_action()
         
         # 优化点 3: 将耗时的 IO 操作 (保存历史、刷新列表) 放到最后异步执行，绝对不能阻塞粘贴
         QTimer.singleShot(100, self.update_list)

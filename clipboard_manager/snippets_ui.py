@@ -1088,6 +1088,12 @@ class PhraseWizardDialog(QDialog):
         self.accept()
 
 class PhraseListWidget(QListWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragEnabled(True)
+        self.setDragDropMode(QListWidget.DragDropMode.DragOnly)
+        self.setDefaultDropAction(Qt.DropAction.CopyAction)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         viewport_width = self.viewport().width() - 12
@@ -1098,6 +1104,40 @@ class PhraseListWidget(QListWidget):
                 if widget:
                     widget.setFixedWidth(viewport_width)
                     item.setSizeHint(widget.sizeHint())
+                    
+    def startDrag(self, supportedActions):
+        item = self.currentItem()
+        if not item:
+            return
+        
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if not data:
+            return
+            
+        from PyQt6.QtGui import QDrag
+        from PyQt6.QtCore import QMimeData
+        drag = QDrag(self)
+        mime_data = QMimeData()
+        
+        text = data.get("content", "")
+        mime_data.setText(text)
+        drag.setMimeData(mime_data)
+        
+        widget = self.itemWidget(item)
+        if widget:
+            from PyQt6.QtGui import QPixmap, QPainter
+            from PyQt6.QtCore import QPoint
+            pixmap = widget.grab()
+            transparent_pixmap = QPixmap(pixmap.size())
+            transparent_pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(transparent_pixmap)
+            painter.setOpacity(0.9)
+            painter.drawPixmap(0, 0, pixmap)
+            painter.end()
+            drag.setPixmap(transparent_pixmap)
+            drag.setHotSpot(QPoint(transparent_pixmap.width() // 2, transparent_pixmap.height() // 2))
+            
+        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction)
 
 class SnippetsUI(QWidget):
     phrase_clicked = pyqtSignal(dict)  # 信号：当短语被点击时，发射短语数据字典（含type和content）
@@ -1792,11 +1832,13 @@ class SnippetsUI(QWidget):
                     image_path = content
                     icon_color = "#a6e3a1" if theme == "dark" else "#40a02b"
                     type_icon.setPixmap(create_svg_icon(SVG_IMAGE, 14, icon_color).pixmap(14, 14))
+                    type_text = "图片"
                 elif item_type == "video":
                     display_text = f"[视频] {os.path.basename(content) if isinstance(content, str) else ''}"
                     video_path = content
                     icon_color = "#f9e2af" if theme == "dark" else "#df8e1d"
                     type_icon.setPixmap(create_svg_icon(SVG_PLAY, 14, icon_color).pixmap(14, 14))
+                    type_text = "视频"
                 elif item_type == "file":
                     if isinstance(content, list):
                         display_text = f"[文件] {os.path.basename(content[0])} 等{len(content)}个文件"
@@ -1804,12 +1846,29 @@ class SnippetsUI(QWidget):
                         display_text = f"[文件] {os.path.basename(content)}"
                     icon_color = "#89b4fa" if theme == "dark" else "#1e66f5"
                     type_icon.setPixmap(create_svg_icon(SVG_FILE, 14, icon_color).pixmap(14, 14))
+                    type_text = "文件"
                 else:
                     display_text = content
                     icon_color = "#89b4fa" if theme == "dark" else "#1e66f5"
                     type_icon.setPixmap(create_svg_icon(SVG_PHRASE, 14, icon_color).pixmap(14, 14))
+                    type_text = "文本"
                     
-                header_layout.addWidget(type_icon)
+                type_label = QLabel(type_text)
+                type_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                type_label.setFont(QFont("Microsoft YaHei", 9, QFont.Weight.Bold))
+                if theme == "dark":
+                    type_label.setStyleSheet("color: #cdd6f4;")
+                else:
+                    type_label.setStyleSheet("color: #4c4f69;")
+                    
+                type_layout = QHBoxLayout()
+                type_layout.setSpacing(2)
+                type_layout.setContentsMargins(0, 0, 0, 0)
+                type_icon.setFixedSize(14, 14)
+                type_layout.addWidget(type_icon)
+                type_layout.addWidget(type_label)
+                
+                header_layout.addLayout(type_layout)
                 header_layout.addStretch()
                 
                 # 仅在搜索结果中显示该短语所属的场景和分组（右对齐显示）
@@ -1936,11 +1995,22 @@ class SnippetsUI(QWidget):
                 if item_type != "text" and remark:
                     display_text += f" - {remark}"
                     
+                if item_type == "text":
+                    max_chars = 200
+                    lines = display_text.split('\n')
+                    if len(lines) > 5:
+                        display_text = '\n'.join(lines[:5]) + "\n..."
+                    elif len(display_text) > max_chars:
+                        display_text = display_text[:max_chars] + "..."
+                        
                 # 文本标题
                 text_lbl = QLabel(display_text)
                 text_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
                 text_lbl.setFont(QFont("Microsoft YaHei", 10))
                 text_lbl.setWordWrap(True)
+                if item_type == "text":
+                    text_lbl.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+                    text_lbl.setMaximumHeight(160) # 限制最大高度，超长文本在底部自然裁剪，不遮挡顶部
                 text_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 text_lbl.setStyleSheet(f"color: {'#cdd6f4' if theme == 'dark' else '#4c4f69'}; line-height: 1.4;")
                 layout.addWidget(text_lbl)
