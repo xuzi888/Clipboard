@@ -63,6 +63,14 @@ class SnippetsManager:
 
     def save_data(self):
         try:
+            if os.path.exists(self.data_file):
+                try:
+                    with open(self.data_file, 'r', encoding='utf-8') as f:
+                        file_data = json.load(f)
+                        if isinstance(file_data, dict) and "history" in file_data:
+                            self.data["history"] = file_data["history"]
+                except Exception:
+                    pass
             with open(self.data_file, 'w', encoding='utf-8') as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
         except Exception as e:

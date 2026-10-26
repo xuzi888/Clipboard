@@ -8,7 +8,7 @@
 
 这是一款基于 **Python (PyQt6)** 开发的现代化 Windows 桌面剪贴板管理工具。它不仅能自动无感记录您复制的历史内容（文本、图片），还提供强大的**“场景-分组-短语”三级快捷短语管理功能**，完美契合日常办公、客服回复、代码编写等高频输入场景，大幅提升您的工作效率。
 - **作者**：xuzi
-- **当前最新版本**：v1.1
+- **当前最新版本**：v1.1.1
 - **GitHub 仓库**：[xuzi888/Clipboard](https://github.com/xuzi888/Clipboard)
 - **程序下载**：[最新版安装包下载](https://github.com/xuzi888/Clipboard/releases/tag/%E5%89%AA%E8%B4%B4%E6%9D%BF%E7%AE%A1%E7%90%86%E5%99%A8%E5%AE%89%E8%A3%85%E5%8C%85)
 - **QQ 交流群**：`550133641` (欢迎进群交流反馈 BUG 或提供新功能建议)
@@ -285,7 +285,7 @@ python update_version.py 1.5
 ## 👨‍💻 交流与反馈
 
 - **作者**：xuzi
-- **当前最新版本**：v1.1
+- **当前最新版本**：v1.1.1
 - **GitHub 仓库**：[xuzi888/Clipboard](https://github.com/xuzi888/Clipboard)
 - **程序下载**：[最新版安装包下载](https://github.com/xuzi888/Clipboard/releases/tag/%E5%89%AA%E8%B4%B4%E6%9D%BF%E7%AE%A1%E7%90%86%E5%99%A8%E5%AE%89%E8%A3%85%E5%8C%85)
 - **QQ 交流群**：`550133641` (欢迎进群交流反馈 BUG 或提供新功能建议)
