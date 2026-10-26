@@ -1,31 +1,5 @@
 {
-  "history": [
-    {
-      "type": "text",
-      "text": "给我安装包和打包",
-      "timestamp": 1792983882.6781566
-    },
-    {
-      "type": "text",
-      "text": "### 我所做的操作\n1. 我刚刚通过终端命令`Stop-Process -Name python -Force` 帮你 强行结束了后台所有残留的 Python 进程 。\n2. 我进一步优化了主窗口（`ClipboardApp` ）和所有弹出窗口的底层布局边距，彻底杜绝了`QGraphicsDropShadowEffect` （阴影特效）在动画执行期间超出窗口边界而导致 Windows 底层 API 抛出“参数错误”的问题。",
-      "timestamp": 1792983876.5003874
-    },
-    {
-      "type": "text",
-      "text": "我明白你的情况了。在 PyQt6 和 Windows 系统下，如果对无边框窗口 (FramelessWindowHint) 使用半透明背景属性 (`WA_TranslucentBackground` )， 并且同时在里面使用`QGraphicsDropShadowEffect` (阴影效果) ，就会频繁触发这个底层`UpdateLayeredWindowIndirect failed` 的参数错误。这个错误特别容易在执行淡入淡出动画或频繁重绘时爆发。",
-      "timestamp": 1792983850.3045878
-    },
-    {
-      "type": "text",
-      "text": "了布局边距 ：\n因为移除了阴影效果，之前的布局留白（`setContentsMargins` ）就不再需要那么大了，所以我把那些为了显示阴影而预留的空隙全",
-      "timestamp": 1792983835.170549
-    },
-    {
-      "type": "text",
-      "text": "问题1.如果程序点击进入运行了那么我里面有复制的东西点击运行后他会自动复制上面，但是快捷短语如果删除了场景他会把场景分组内容都删除了但是怎么打开程序自动复制那个也删除了",
-      "timestamp": 1792982440.1562722
-    }
-  ],
+  "history": [],
   "snippets": {
     "scenes": []
   }
