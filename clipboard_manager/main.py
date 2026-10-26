@@ -721,7 +721,7 @@ class SettingsWidget(QWidget):
         self._last_theme = None
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 15, 5, 0)
+        main_layout.setContentsMargins(5, 15, 5, 0)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -764,7 +764,7 @@ class SettingsWidget(QWidget):
         scroll_widget = QWidget()
         scroll_widget.setObjectName("ScrollWidget")
         scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setContentsMargins(0, 0, 10, 0)
+        scroll_layout.setContentsMargins(0, 0, 14, 0) # Account for scrollbar width (14px)
         scroll_layout.setSpacing(16)
         
         # 设置组1：通用
@@ -1161,7 +1161,7 @@ class SettingsWidget(QWidget):
             }}
             #SettingGroup {{
                 background-color: {card};
-                border: 1px solid {border};
+                border: none;
                 border-radius: 12px;
             }}
             .SettingLabel {{

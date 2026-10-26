@@ -68,7 +68,7 @@
  [],
  False,
  False,
- 1792932979,
+ 1792984638,
  [('runw.exe',
    'd:\\daima\\kjj\\clipboard_manager\\venv\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')],

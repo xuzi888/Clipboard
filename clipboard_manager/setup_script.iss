@@ -1,7 +1,7 @@
 [Setup]
 AppName=剪贴板管理器
 ; 注意：这里的版本号会被 sync_version.py 脚本自动从 main.py 同步更新，请务必保留此行
-AppVersion=1.1
+AppVersion=1.1.1
 AppPublisher=xuzi
 AppPublisherURL=https://github.com/xuzi888/Clipboard
 AppSupportURL=https://github.com/xuzi888/Clipboard
