@@ -70,17 +70,7 @@ class Toast(QWidget):
             
         layout.addWidget(self.label)
         
-        # 更强的阴影效果，增加层次感
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(25)
-        shadow.setColor(QColor(0, 0, 0, 150))
-        shadow.setOffset(0, 5)
-        self.label.setGraphicsEffect(shadow)
-        
-        self.opacity_effect = QGraphicsOpacityEffect(self)
-        self.setGraphicsEffect(self.opacity_effect)
-        
-        self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.animation = QPropertyAnimation(self, b"windowOpacity")
         self.animation.setDuration(2000)  # 稍微延长提示停留时间
         self.animation.setStartValue(1.0)
         self.animation.setEndValue(0.0)
@@ -400,19 +390,36 @@ class ConfirmDialog(QDialog):
         self.result_btn = False
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
         
-        # 添加阴影效果
-        from PyQt6.QtWidgets import QGraphicsDropShadowEffect
-        from PyQt6.QtGui import QColor
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(20)
-        shadow.setOffset(0, 4)
+        # shadow = QGraphicsDropShadowEffect()
+        # shadow.setBlurRadius(20)
+        # shadow.setOffset(0, 4)
+        # if theme == "dark":
+        #     shadow.setColor(QColor(0, 0, 0, 150))
+        #     bg = "#1e1e2e"
+        #     text = "#cdd6f4"
+        #     border = "#313244"
+        #     btn_bg = "#313244"
+        #     btn_hover = "#45475a"
+        #     danger_bg = "#f38ba8"
+        #     danger_text = "#11111b"
+        # else:
+        #     shadow.setColor(QColor(0, 0, 0, 40))
+        #     bg = "#ffffff"
+        #     text = "#4c4f69"
+        #     border = "#e6e9ef"
+        #     btn_bg = "#e6e9ef"
+        #     btn_hover = "#bcc0cc"
+        #     danger_bg = "#d20f39"
+        #     danger_text = "#eff1f5"
+            
+        # self.container.setGraphicsEffect(shadow)
+        
         if theme == "dark":
-            shadow.setColor(QColor(0, 0, 0, 150))
             bg = "#1e1e2e"
             text = "#cdd6f4"
             border = "#313244"
@@ -421,7 +428,6 @@ class ConfirmDialog(QDialog):
             danger_bg = "#f38ba8"
             danger_text = "#11111b"
         else:
-            shadow.setColor(QColor(0, 0, 0, 40))
             bg = "#ffffff"
             text = "#4c4f69"
             border = "#e6e9ef"
@@ -429,8 +435,6 @@ class ConfirmDialog(QDialog):
             btn_hover = "#bcc0cc"
             danger_bg = "#d20f39"
             danger_text = "#eff1f5"
-            
-        self.container.setGraphicsEffect(shadow)
             
         self.container.setStyleSheet(f"""
             QWidget#Container {{
@@ -576,7 +580,7 @@ class CustomSaveConfirmDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -622,11 +626,11 @@ class CustomSaveConfirmDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 80 if theme == "light" else 150))
-        shadow.setOffset(0, 4)
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(20)
+        # shadow.setColor(QColor(0, 0, 0, 80 if theme == "light" else 150))
+        # shadow.setOffset(0, 4)
+        # self.container.setGraphicsEffect(shadow)
         
         self.update_theme(theme)
         
@@ -1448,7 +1452,7 @@ class TutorialDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setContentsMargins(35, 35, 35, 35)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -1589,11 +1593,11 @@ class TutorialDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(25)
-        shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
-        shadow.setOffset(0, 6)
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(25)
+        # shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
+        # shadow.setOffset(0, 6)
+        # self.container.setGraphicsEffect(shadow)
         
         self.apply_style(theme)
         
@@ -2035,11 +2039,11 @@ class AboutDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(25)
-        shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
-        shadow.setOffset(0, 5)
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(25)
+        # shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
+        # shadow.setOffset(0, 5)
+        # self.container.setGraphicsEffect(shadow)
         
         self.apply_style(theme)
 
@@ -2259,11 +2263,12 @@ class EditTextDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # Shadow
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
-        shadow.setOffset(0, 4)
-        self.container.setGraphicsEffect(shadow)
+        # 阴影会导致无边框半透明窗口闪烁或报错，暂时移除
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(20)
+        # shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
+        # shadow.setOffset(0, 4)
+        # self.container.setGraphicsEffect(shadow)
         
         self.apply_style(theme)
 
@@ -2475,11 +2480,11 @@ class ImageViewerDialog(QDialog):
         
         layout.addWidget(self.container)
         
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
-        shadow.setOffset(0, 4)
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(20)
+        # shadow.setColor(QColor(0, 0, 0, 150 if theme == "light" else 200))
+        # shadow.setOffset(0, 4)
+        # self.container.setGraphicsEffect(shadow)
         
         bg_color = "#1e1e2e" if theme == "dark" else "#f2f4f8"
         border_color = "#45475a" if theme == "dark" else "#dce0e8"
@@ -2710,7 +2715,7 @@ class ClipboardApp(QMainWindow):
         
         # 外层布局，产生留白以显示阴影
         outer_layout = QVBoxLayout(self.central_widget)
-        outer_layout.setContentsMargins(10, 15, 10, 15) # 进一步减小阴影留白，让界面物理感更紧凑
+        outer_layout.setContentsMargins(25, 25, 25, 25) # 进一步减小阴影留白，让界面物理感更紧凑
         
         # 实际的内容容器
         self.container = QWidget()
@@ -2914,11 +2919,11 @@ class ClipboardApp(QMainWindow):
         
         self.apply_theme()
         
-        shadow = QGraphicsDropShadowEffect(self.container)
-        shadow.setBlurRadius(15)
-        shadow.setColor(QColor(0, 0, 0, 120))
-        shadow.setOffset(0, 4)
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self.container)
+        # shadow.setBlurRadius(15)
+        # shadow.setColor(QColor(0, 0, 0, 120))
+        # shadow.setOffset(0, 4)
+        # self.container.setGraphicsEffect(shadow)
         
         # 初始化正确的 QSizePolicy 状态，启动时不使用动画防止抖动
         self.switch_tab(0, animate=False)
