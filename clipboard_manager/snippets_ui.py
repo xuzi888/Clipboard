@@ -67,7 +67,7 @@ class CustomInputDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -118,12 +118,12 @@ class CustomInputDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影效果
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(15)
-        shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 60))
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(15)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(4)
+        # shadow.setColor(QColor(0, 0, 0, 60))
+        # self.container.setGraphicsEffect(shadow)
         
         self.update_theme(theme)
         self.resize(420, 280 if multiline else 200)
@@ -217,7 +217,7 @@ class CustomConfirmDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -257,12 +257,12 @@ class CustomConfirmDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(15)
-        shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 60))
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(15)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(4)
+        # shadow.setColor(QColor(0, 0, 0, 60))
+        # self.container.setGraphicsEffect(shadow)
         
         self.update_theme(theme)
         self.resize(360, 160)
@@ -333,7 +333,7 @@ class CustomAlertDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -367,12 +367,12 @@ class CustomAlertDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(15)
-        shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 60))
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(15)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(4)
+        # shadow.setColor(QColor(0, 0, 0, 60))
+        # self.container.setGraphicsEffect(shadow)
         
         self.update_theme(theme)
         self.resize(360, 160)
@@ -471,7 +471,7 @@ class PhraseWizardDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         
         self.container = QWidget()
         self.container.setObjectName("Container")
@@ -624,12 +624,12 @@ class PhraseWizardDialog(QDialog):
         main_layout.addWidget(self.container)
         
         # 阴影效果
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(15)
-        shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 60))
-        self.container.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect(self)
+        # shadow.setBlurRadius(15)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(4)
+        # shadow.setColor(QColor(0, 0, 0, 60))
+        # self.container.setGraphicsEffect(shadow)
         
         self.update_theme()
         self.resize(450, 480)
@@ -2625,11 +2625,11 @@ class SnippetsUI(QWidget):
         menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         menu.setStyleSheet(self.get_menu_style())
         
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
-        shadow.setColor(QColor(0, 0, 0, 40) if self.theme == "light" else QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 4)
-        menu.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect()
+        # shadow.setBlurRadius(15)
+        # shadow.setColor(QColor(0, 0, 0, 40) if self.theme == "light" else QColor(0, 0, 0, 80))
+        # shadow.setOffset(0, 4)
+        # menu.setGraphicsEffect(shadow)
         
         edit_action = QAction("重命名", self)
         del_action = QAction("删除", self)
@@ -2754,11 +2754,11 @@ class SnippetsUI(QWidget):
         menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         menu.setStyleSheet(self.get_menu_style())
         
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
-        shadow.setColor(QColor(0, 0, 0, 40) if self.theme == "light" else QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 4)
-        menu.setGraphicsEffect(shadow)
+        # shadow = QGraphicsDropShadowEffect()
+        # shadow.setBlurRadius(15)
+        # shadow.setColor(QColor(0, 0, 0, 40) if self.theme == "light" else QColor(0, 0, 0, 80))
+        # shadow.setOffset(0, 4)
+        # menu.setGraphicsEffect(shadow)
         
         edit_action = QAction("编辑", self)
         del_action = QAction("删除", self)
