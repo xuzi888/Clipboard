@@ -13,7 +13,7 @@ from PyQt6.QtCore import QMimeData, QPoint, Qt, pyqtSignal, QObject, QByteArray,
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 
-APP_VERSION = "1.1" # 全局统一版本号
+APP_VERSION = "1.1.1" # 全局统一版本号
 APP_NAME = "剪贴板管理器"
 APP_ID = "KjjClipboardManager"
 
